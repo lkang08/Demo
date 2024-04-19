@@ -1,9 +1,17 @@
+import com.demo.common.FlavorsKt
+
+buildscript {
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.2.0'
+    }
+}
+
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'com.demo.myplugin'
+    //id 'com.demo.myplugin'
+    id 'kotlin-kapt'
 }
-
 android {
     compileSdk 32
 
@@ -15,12 +23,38 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [AROUTER_MODULE_NAME: project.getName()]
+            }
+        }
+        kapt {
+            arguments {
+                arg("AROUTER_MODULE_NAME", project.name)
+            }
+        }
     }
 
+    flavorDimensions "version"
     buildTypes {
+        debug {
+            debuggable true
+            minifyEnabled false
+            println("buildTypes getCurrentFlavor ${getCurrentFlavorByEnv()}")
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets {
+        main {
+            java {
+                include '**/*.java'
+                include '**/*.kt'
+
+                java.srcDirs += ['src/main/java/']
+            }
         }
     }
     compileOptions {
@@ -33,16 +67,41 @@ android {
 }
 
 dependencies {
-
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.5.1'
     implementation 'com.google.android.material:material:1.4.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'com.makeramen:roundedimageview:2.3.0'
+    implementation project(path: ':baseModule')
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
-    implementation ("com.github.bumptech.glide:glide:4.11.0") {
+    implementation("com.github.bumptech.glide:glide:4.11.0") {
         exclude group: "com.android.support"
+    }
+
+    kapt "com.alibaba:arouter-compiler:$arouter_version"
+}
+//def configFlavor(ProductFlavor flavor, FlavorConfig config) {
+//    println "configFlavor flavorName:${flavor.name}  appName:${config.name}"
+//}
+def getCurrentFlavorByEnv() {
+    return getFlavorConfig().name
+}
+
+def cFlavor = getFlavorConfig()
+FlavorsKt.maJiaFlavors.forEach { flavor ->
+    project.android.productFlavors.create(flavor.name) { productFlavor ->
+        dimension "version"
+        //configFlavor(productFlavor, cFlavor)
+        productFlavor.setApplicationId(flavor.applicationId)
+        productFlavor.buildConfigField("String", "FLAVOR", "\"${flavor.externalName}\"")
+        missingDimensionStrategy "version", "${flavor.name}"
+//    configureDefaultConfig {
+//        able = !isLocalBuild()
+//        configHost = cFlavor.configCenterUrl
+//        configBssCode = cFlavor.configCenterBssCode
+//        configVersion = version
+//    }
     }
 }

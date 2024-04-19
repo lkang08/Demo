@@ -16,3 +16,6 @@ dependencyResolutionManagement {
 rootProject.name = "Demo"
 include ':app'
 include ':plugin'
+include ':home'
+include ':baseModule'
+include ':mylibrary'

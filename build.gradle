@@ -1,6 +1,11 @@
+import com.demo.common.FlavorConfig
+import com.demo.common.FlavorsKt
+import groovy.transform.Field
+
 buildscript {
     dependencies {
         classpath 'com.demo.myplugin:myplugin:1.0.0'
+        classpath 'com.android.tools.build:gradle:7.2.0'
     }
 }
 
@@ -10,6 +15,42 @@ plugins {
     id 'org.jetbrains.kotlin.android' version '1.7.10' apply false
 }
 
+ext {
+    isLocalBuild = isLocalBuild()
+    localBuildFlavor = isLocalBuild() ? "demo1" : System.getenv("MOBILE_APP_NAME")
+    File local = file("local.properties")
+    if (local.canRead()) {
+        Properties p = new Properties()
+        p.load(new FileInputStream(local))
+        if (p.containsKey("flavor")) {
+            localBuildFlavor = p.getProperty("flavor")
+        }
+    }
+    println("localBuildFlavor=$localBuildFlavor")
+}
+
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+
+@Field
+FlavorConfig tmpConfig
+
+def isLocalBuild() {
+    return true
+}
+
+FlavorConfig getFlavorConfig() {
+    if (tmpConfig != null) return tmpConfig
+    def taskName = isLocalBuild() ?
+            localBuildFlavor
+            : System.getenv("MOBILE_APP_NAME") as String
+    def config = FlavorsKt.maJiaFlavors.find {
+        (gradle.startParameter.taskNames[0] ?: taskName).toLowerCase().contains(it.name)
+    } ?: FlavorsKt.maJiaFlavors.find {
+        taskName.toLowerCase().contains(it.name)
+    }
+    println("getFlavorConfig:" + config)
+    tmpConfig = config
+    return config
 }
