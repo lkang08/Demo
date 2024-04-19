@@ -1,0 +1,68 @@
+apply plugin: 'java-library'
+apply plugin: 'kotlin'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'maven-publish'
+
+dependencies {
+    implementation gradleApi()
+    implementation("com.android.tools.build:gradle:4.1.3")
+    implementation localGroovy()
+    compileOnly("org.ow2.asm:asm-commons:9.2")
+    compileOnly("org.ow2.asm:asm-tree:9.2")
+}
+
+//apply from: '../gradle_java_publish.gradle'
+//ext.addPublishPluginTask('plugin')
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+group='com.demo.myplugin'
+version='1.0.0'
+
+publishing {
+    publications {
+//        myLibrary(MavenPublication) {
+//            from components.java
+//        }
+        maven(MavenPublication) {
+            groupId = "$group"
+            artifactId = 'myplugin'
+            version = "$version"
+
+            from components.java
+        }
+    }
+
+    repositories {
+        maven {
+            name = 'myRepo'
+            url = '../maven_repo'
+
+        }
+    }
+    println("version plugin $group is --> $version")
+}
+
+//uploadArchives {
+//    repositories {
+//        mavenDeployer {
+//            pom.groupId = "$GROUP"
+//            pom.version = "$version"
+//            pom.artifactId = 'plugin'
+//            //文件发布到下面目录
+//            repository(url: uri('../maven_repo'))
+//        }
+//    }
+//    println("version plugin $GROUP is --> $version")
+//}
+
+//publishing {
+//    repositories {
+//        maven {
+//            url = uri("${rootProject.projectDir}/maven-repo")
+//        }
+//    }
+//}
